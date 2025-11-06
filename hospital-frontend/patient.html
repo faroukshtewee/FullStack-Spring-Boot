@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול מטופלים - בית חולים</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- Configure Tailwind for custom font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+    </style>
+</head>
+<body >
+    <header>
+        <h1>🏥 מערכת ניהול מטופלים</h1>
+        <p>בית חולים כללי</p>
+    </header>
+    <main>
+        <section>
+            <h2>הוספה / עדכון מטופל</h2>
+            <form id="patient-form">
+                <input type="hidden" id="patient-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">שם פרטי: *</label>
+                        <input type="text" id="firstName" required minlength="2" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">שם משפחה: *</label>
+                        <input type="text" id="lastName" required minlength="2" maxlength="50">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dateOfBirth">תאריך לידה: *</label>
+                        <input type="text" id="dateOfBirth" required pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD" title="הזן תאריך בפורמט YYYY-MM-DD">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phoneNumber">טלפון: *</label>
+                        <input type="tel" id="phoneNumber" required pattern="^05\d-\d{7}$" placeholder="050-1234567">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">אימייל: *</label>
+                        <input type="email" id="email" required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" placeholder="example@email.com">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">הוסף מטופל</button>
+                    <button type="button" id="cancel-edit-btn" class="btn-secondary" style="display:none;">בטל עדכון</button>
+                </div>
+            </form>
+        </section>
+        <section id="table-section">
+            <h2>רשימת מטופלים</h2>
+            <div class="table-controls">
+                <input type="text" id="search-input" placeholder="חפש מטופל (מספר מזהה,שם, טלפון, אימייל...)">
+                <div class="flex flex-col space-y-2"> 
+                    <div class="flex items-center space-x-2"> 
+                        <input type="checkbox" id="feature-toggle" unchecked>
+                        <span class="text-lg font-medium label-text">
+                            מספר מזהה
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="name-toggle" unchecked>
+                        <span class="text-lg font-medium label-text">
+                            לפי שם פרטי 
+                        </span>
+                    </div>
+                </div>
+              
+                <button id="refresh-btn" class="btn-secondary">🔄 רענן רשימה</button>
+            </div>
+               <!-- Age Filter Section -->
+               <div class="filter-section">
+                <h3>🔍 סינון לפי גיל</h3>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="min-age">גיל מינימלי:</label>
+                        <input type="number" id="min-age" min="0" max="150" placeholder="0">
+                    </div>
+                    <div class="filter-group">
+                        <label for="max-age">גיל מקסימלי:</label>
+                        <input type="number" id="max-age" min="0" max="150" placeholder="150">
+                    </div>
+                    <button id="apply-age-filter-btn" class="btn-primary">החל סינון</button>
+                    <button id="clear-age-filter-btn" class="btn-secondary">נקה סינון</button>
+                </div>
+                
+                <!-- Quick Age Group Filters -->
+                <div class="quick-filters">
+                    <span>סינון מהיר:</span>
+                    <button class="quick-filter-btn" data-min="0" data-max="18">ילדים (0-18)</button>
+                    <button class="quick-filter-btn" data-min="19" data-max="35">צעירים (19-35)</button>
+                    <button class="quick-filter-btn" data-min="36" data-max="60">מבוגרים (36-60)</button>
+                    <button class="quick-filter-btn" data-min="61" data-max="150">קשישים (61+)</button>
+                </div>
+            </div>
+            <div class="filter-section">
+                <button id="most-appointments-btn" class="btn-secondary">מספר הפגישות הרב ביותר</button>
+                <label for="limit">גבול:</label>
+                <input type="number" id="limit" required ></button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>מזהה</th>
+                            <th>שם פרטי</th>
+                            <th>שם משפחה</th>
+                            <th>תאריך לידה</th>
+                            <th>גיל</th>
+                            <th>טלפון</th>
+                            <th>אימייל</th>
+                            <th>תורים</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patients-table-body">
+                        <tr>
+                            <td colspan="9" style="text-align:center;">טוען נתונים מהשרת...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="stats">
+                <p>סה"כ מטופלים: <strong id="total-count">0</strong></p>
+            </div>
+             <!-- *** START AGE STATISTICS DASHBOARD *** -->
+             <div class="max-w-4xl mx-auto mt-10">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-10 text-center border-b pb-3">
+                     סטטיסטיקת גילאי מטופלים
+                </h2>
+
+                <!-- Loading Indicator -->
+                <div id="loading" class="text-center p-8 text-xl text-indigo-600 hidden">
+                    <svg class="animate-spin h-8 w-8 text-indigo-500 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    טוען נתונים...
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-message" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow hidden" role="alert">
+                    <p class="font-bold">שגיאת נתונים</p>
+                    <p id="error-detail">לא ניתן לטעון את סטטיסטיקת המטופלים.</p>
+                </div>
+
+                <!-- Chart Section -->
+                <div id="chart-container" class="bg-white p-6 rounded-xl shadow-xl mb-6 hidden">
+                    <h3 class="text-2xl font-semibold text-gray-700 mb-4 text-center border-b pb-2">פיזור מטופלים לפי קבוצות גיל</h3>
+                    <div class="h-80 w-full flex justify-center items-center">
+                        <!-- Canvas for Chart.js -->
+                        <canvas id="ageDoughnutChart" class="max-h-full max-w-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Stats Grid (Main display) -->
+                <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+                    <!-- Total Patients Card -->
+                    <div class="stat-card bg-white p-6 rounded-xl shadow-lg border-b-4 border-indigo-500 transition hover:shadow-xl">
+                        <p class="text-lg font-semibold text-gray-500">סה"כ מטופלים</p>
+                        <p id="totalPatients" class="text-4xl font-bold text-indigo-600 mt-1">0</p>
+                    </div>
+
+                    <!-- Average Age Card -->
+                    <div class="stat-card bg-white p-6 rounded-xl shadow-lg border-b-4 border-green-500 transition hover:shadow-xl">
+                        <p class="text-lg font-semibold text-gray-500">ממוצע גיל</p>
+                        <p id="averageAge" class="text-4xl font-bold text-green-600 mt-1">0</p>
+                    </div>
+
+                    <!-- Minimum Age Card -->
+                    <div class="stat-card bg-white p-6 rounded-xl shadow-lg border-b-4 border-yellow-500 transition hover:shadow-xl">
+                        <p class="text-lg font-semibold text-gray-500">גיל מינימלי</p>
+                        <p id="minAge" class="text-4xl font-bold text-yellow-600 mt-1">0</p>
+                    </div>
+
+                    <!-- Maximum Age Card -->
+                    <div class="stat-card bg-white p-6 rounded-xl shadow-lg border-b-4 border-red-500 transition hover:shadow-xl">
+                        <p class="text-lg font-semibold text-gray-500">גיל מקסימלי</p>
+                        <p id="maxAge" class="text-4xl font-bold text-red-600 mt-1">0</p>
+                    </div>
+                </div>
+            </div>
+            <!-- *** END AGE STATISTICS DASHBOARD *** -->
+
+        </section>
+    </main>
+    <footer>
+        <p>נבנה ע"י Farouk Shtewee © 2025 | מערכת ניהול בית חולים</p>
+    </footer>
+    <script src="patientApp.js"></script>
+</body>
+</html>
