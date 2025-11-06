@@ -22,15 +22,13 @@ public class AppointmentService {
     private final PatientService patientService;
     private String doctor = "doctor";
     private String patient = "patient";
-    // Start with a fresh copy of all possible slots
-    List<String> availableSlots = new ArrayList<>(ALL_SLOTS);
+
     private static final List<String> ALL_SLOTS = generateAllSlots();
     public AppointmentService(DoctorService doctorService, PatientService patientService) {
         this.doctorService = doctorService;
         this.patientService = patientService;
     }
 
-    // Helper method to generate the base 15-minute slots (9:00 - 16:45)
     private static List<String> generateAllSlots() {
         List<String> slots = new ArrayList<>();
         for (int hour = 9; hour < 17; hour++){
@@ -216,8 +214,8 @@ public class AppointmentService {
 //                .map(LocalTime::toString)
 //                .collect(Collectors.toList());
 //    }
-public List<String> getAvailableTimeSlots(Long doctorId, String date){
-
+    public List<String> getAvailableTimeSlots(Long doctorId, String date){
+        List<String> availableSlots = new ArrayList<>(ALL_SLOTS);
     List<AppointmentDto> appointmentExist = getDailySchedule(doctorId, date);
     Set<String> bookedSlots = new HashSet<>();
     for (AppointmentDto appointment : appointmentExist) {
