@@ -330,5 +330,24 @@ footer {
 }
 
 
-
-
+.back-button {
+  display: inline-block;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  background-color: #007bff; /* Blue color */
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  float: left; 
+}
+.back-button:hover {
+  background-color: #0056b3;
+}
+.navigation-bar {
+  max-width: 1400px; /* Use the same max-width as the 'main' section */
+  margin: 0 auto 2rem auto; /* Center the navigation bar container */
+  padding: 0 1rem;
+  text-align: right; /* IMPORTANT: This aligns the inline-block button to the right in RTL */
+}
